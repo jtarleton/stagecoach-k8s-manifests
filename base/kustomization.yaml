@@ -1,0 +1,32 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: stagecoach
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: stagecoach
+    includeSelectors: false
+resources:
+  - namespace.yaml
+  - mariadb.yaml
+  - redis.yaml
+  - drupal.yaml
+  - varnish.yaml
+  - cron.yaml
+  - networkpolicies.yaml
+configMapGenerator:
+  - name: mariadb-config
+    files: [config/mariadb.cnf]
+  - name: varnish-vcl
+    files: [config/default.vcl]
+  - name: drupal-env
+    literals:
+      - DB_HOST=mariadb
+      - DB_NAME=drupal
+      - DB_USER=drupal
+      - REDIS_HOST=redis
+      - DRUPAL_TRUSTED_HOSTS=stagecoach.sh
+      - DRUPAL_REVERSE_PROXY_ADDRESSES=10.42.0.0/16
+      - FRANKENPHP_NUM_THREADS=4
+images:
+  - name: localhost/stagecoach/drupal
+    newTag: "unbuilt"

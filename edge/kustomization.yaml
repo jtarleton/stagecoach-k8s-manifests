@@ -1,0 +1,17 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: stagecoach-edge
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: stagecoach
+    includeSelectors: false
+resources:
+  - namespace.yaml
+  - caddy.yaml
+  - networkpolicy.yaml
+configMapGenerator:
+  - name: caddy-config
+    files: [Caddyfile=config/Caddyfile]
+images:
+  - name: localhost/stagecoach/caddy
+    newTag: "unbuilt"
