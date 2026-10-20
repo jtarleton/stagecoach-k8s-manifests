@@ -9,4 +9,7 @@ RUN xcaddy build --with github.com/caddy-dns/cloudflare@v0.2.4
 
 FROM docker.io/library/caddy:${CADDY_VERSION}-alpine
 COPY --from=builder /usr/bin/caddy /usr/bin/caddy
-RUN caddy list-modules | grep -q '^dns.providers.cloudflare$'
+# The pod binds 80/443 through the unprivileged-port sysctl instead. A file
+# capability would make exec fail under allowPrivilegeEscalation=false.
+RUN setcap -r /usr/bin/caddy \
+ && caddy list-modules | grep -q '^dns.providers.cloudflare$'

@@ -16,4 +16,4 @@ configMapGenerator:
     envs: [config/cloudflare.env]
 images:
   - name: localhost/stagecoach/caddy
-    newTag: "unbuilt"
+    newTag: "202610200041-ee158ce-dirty"
