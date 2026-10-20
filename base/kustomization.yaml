@@ -12,6 +12,7 @@ resources:
   - drupal.yaml
   - varnish.yaml
   - cron.yaml
+  - backup.yaml
   - networkpolicies.yaml
 configMapGenerator:
   - name: mariadb-config
@@ -30,4 +31,4 @@ configMapGenerator:
       - DRUSH_OPTIONS_URI=https://stagecoach.sh
 images:
   - name: localhost/stagecoach/drupal
-    newTag: "202610200233-a00235b-dirty"
+    newTag: "202610200317-5782e6e"

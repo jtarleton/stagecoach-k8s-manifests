@@ -17,13 +17,14 @@ Cloudflare ─► Caddy (edge, TLS) ─► Varnish ─► FrankenPHP (Drupal 11)
 | MariaDB 11.8 LTS | `stagecoach` | StatefulSet, 5 Gi PVC, tuned for a 2 GB host |
 | Redis 8.2 | `stagecoach` | Cache only (no persistence), 48 MB LRU, password auth |
 | Drupal cron | `stagecoach` | CronJob every 15 min (`drush cron`) |
+| DB backup | `stagecoach` | CronJob nightly 03:15 UTC, 14 verified dumps on a 5 Gi PVC |
 
 ## Layout
 
 - `base/`: app namespace (Pod Security **restricted**, default-deny NetworkPolicies), MariaDB, Redis, Drupal, Varnish, cron. `base/config/` holds the VCL and `mariadb.cnf`.
 - `edge/`: Caddy edge in its own namespace (hostPort isn't allowed under restricted), Caddyfile, Cloudflare IP allow-list.
 - `docker/caddy/`: edge Caddy image (xcaddy + Cloudflare DNS provider).
-- `scripts/`: `deploy.sh`, `secrets.sh`, `cloudflare-ips.sh`, `build-caddy.sh`.
+- `scripts/`: `deploy.sh`, `secrets.sh`, `cloudflare-ips.sh`, `build-caddy.sh`, `db-backup-now.sh`, `db-restore.sh`.
 - `secrets/`: git-ignored; holds `cloudflare-api-token` on the server.
 
 **No secrets are committed.** Everything sensitive is a Kubernetes Secret created
@@ -53,11 +54,22 @@ the drupal tag here; commit that change together with the deploy.
 
 **Clear Varnish completely:** `kubectl -n stagecoach rollout restart deploy/varnish`
 
-**Database backup:**
+**Database backups:** the `db-backup` CronJob (`base/backup.yaml`) runs nightly
+at 03:15 UTC. It writes a consistent `mariadb-dump --single-transaction` dump
+to the `db-backups` volume. Each dump is gzip-tested and must contain
+MariaDB's "Dump completed" trailer before it replaces anything. It also gets
+a `.sha256`. The newest 14 are kept (by count, so failing nights never age out good dumps).
+
 ```sh
-kubectl -n stagecoach exec mariadb-0 -- sh -c \
-  'mariadb-dump -udrupal -p"$MARIADB_PASSWORD" --single-transaction drupal' | gzip > drupal-$(date +%F).sql.gz
+scripts/db-backup-now.sh                                       # take a backup now
+scripts/db-restore.sh                                          # list backups, verify checksums
+scripts/db-restore.sh drupal-<stamp>.sql.gz scratch_db         # restore into a scratch DB
+scripts/db-restore.sh drupal-<stamp>.sql.gz                    # restore LIVE (asks to confirm)
 ```
+
+The volume lives on this server's disk, so it covers mistakes (bad deploy,
+deleted content) but **not** loss of the server itself. Copy dumps off-site
+for that.
 
 **Go public (remove the Shield beta gate):**
 `kubectl -n stagecoach delete secret shield && kubectl -n stagecoach rollout restart deploy/drupal deploy/varnish`

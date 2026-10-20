@@ -57,3 +57,16 @@ spec:
           podSelector: {matchLabels: {app.kubernetes.io/name: caddy}}
         - podSelector: {matchLabels: {stagecoach.sh/php: "true"}}
       ports: [{port: 8080}]
+---
+# Nightly backups (base/backup.yaml) read the database directly.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: mariadb-from-backup
+spec:
+  podSelector:
+    matchLabels: {app.kubernetes.io/name: mariadb}
+  ingress:
+    - from:
+        - podSelector: {matchLabels: {app.kubernetes.io/name: db-backup}}
+      ports: [{port: 3306}]
