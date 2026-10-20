@@ -60,6 +60,10 @@ spec:
               valueFrom: {secretKeyRef: {name: redis-auth, key: password}}
             - name: SMTP_PASSWORD
               valueFrom: {secretKeyRef: {name: smtp, key: password, optional: true}}
+            - name: SHIELD_USER
+              valueFrom: {secretKeyRef: {name: shield, key: user, optional: true}}
+            - name: SHIELD_PASS
+              valueFrom: {secretKeyRef: {name: shield, key: pass, optional: true}}
           ports:
             - {name: http, containerPort: 8080}
           startupProbe:

@@ -31,7 +31,17 @@ spec:
             - name: drush
               image: localhost/stagecoach/drupal
               imagePullPolicy: IfNotPresent
-              command: [drush, cron, --quiet]
+              # Fresh pods can briefly lose the race with NetworkPolicy setup, so
+              # wait (up to 30s) until MariaDB is reachable before running cron.
+              command:
+                - sh
+                - -c
+                - |
+                  for i in $(seq 1 30); do
+                    php -r 'exit(@fsockopen(getenv("DB_HOST"), 3306, $e, $m, 2) ? 0 : 1);' && break
+                    sleep 1
+                  done
+                  exec drush cron --quiet
               envFrom:
                 - configMapRef: {name: drupal-env}
               env:
@@ -43,6 +53,10 @@ spec:
                   valueFrom: {secretKeyRef: {name: redis-auth, key: password}}
                 - name: SMTP_PASSWORD
                   valueFrom: {secretKeyRef: {name: smtp, key: password, optional: true}}
+                - name: SHIELD_USER
+                  valueFrom: {secretKeyRef: {name: shield, key: user, optional: true}}
+                - name: SHIELD_PASS
+                  valueFrom: {secretKeyRef: {name: shield, key: pass, optional: true}}
               resources:
                 requests: {cpu: 50m, memory: 128Mi}
                 limits: {memory: 384Mi}
