@@ -3,8 +3,8 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-kubectl apply -k k8s/base
-kubectl apply -k k8s/edge
+kubectl apply -k base
+kubectl apply -k edge
 for w in statefulset/mariadb deploy/redis deploy/drupal deploy/varnish; do
   kubectl -n stagecoach rollout status "$w" --timeout=300s
 done

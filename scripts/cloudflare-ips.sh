@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Refresh Cloudflare's published IP ranges everywhere the origin relies on them:
-#   - Caddy trusted proxies + allow-list (k8s/edge/config/cloudflare.env)
-#   - NetworkPolicy for the edge pod (k8s/edge/networkpolicy.yaml)
+#   - Caddy trusted proxies + allow-list (edge/config/cloudflare.env)
+#   - NetworkPolicy for the edge pod (edge/networkpolicy.yaml)
 #   - ufw rules for host ports 80/443 (defence in depth)
 # Re-run occasionally (Cloudflare rarely changes them), then scripts/deploy.sh.
 set -euo pipefail
@@ -11,7 +11,7 @@ v4=$(curl -sf https://www.cloudflare.com/ips-v4 | grep -E '^[0-9.]+/[0-9]+$')
 v6=$(curl -sf https://www.cloudflare.com/ips-v6 | grep -E '^[0-9a-f:]+/[0-9]+$')
 [ "$(wc -l <<<"$v4")" -ge 10 ] || { echo "unexpected Cloudflare IPv4 list" >&2; exit 1; }
 
-echo "CF_IP_RANGES=$(echo $v4 $v6)" > k8s/edge/config/cloudflare.env
+echo "CF_IP_RANGES=$(echo $v4 $v6)" > edge/config/cloudflare.env
 
 {
   cat <<'YAML'
@@ -31,7 +31,7 @@ spec:
       from:
 YAML
   for c in $v4; do echo "        - ipBlock: {cidr: $c}"; done
-} > k8s/edge/networkpolicy.yaml
+} > edge/networkpolicy.yaml
 
 if command -v ufw >/dev/null && ufw status | grep -q '^Status: active'; then
   # Replace any previous web rules with Cloudflare-only ones.
@@ -42,4 +42,4 @@ if command -v ufw >/dev/null && ufw status | grep -q '^Status: active'; then
   for c in $v4 $v6; do ufw allow proto tcp from "$c" to any port 80,443 comment 'Cloudflare' >/dev/null; done
   echo "ufw: 80/443 limited to $(wc -w <<<"$v4 $v6") Cloudflare ranges"
 fi
-echo "wrote k8s/edge/config/cloudflare.env and k8s/edge/networkpolicy.yaml"
+echo "wrote edge/config/cloudflare.env and edge/networkpolicy.yaml"

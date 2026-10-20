@@ -13,7 +13,7 @@ create() { # namespace name --from-literal...
   echo "secret $ns/$name created"
 }
 
-kubectl apply -f k8s/base/namespace.yaml -f k8s/edge/namespace.yaml >/dev/null
+kubectl apply -f base/namespace.yaml -f edge/namespace.yaml >/dev/null
 
 create stagecoach mariadb \
   --from-literal=password="$(rand 32)" --from-literal=root-password="$(rand 32)"

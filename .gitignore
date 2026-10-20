@@ -2,25 +2,4 @@
 /secrets/*
 !/secrets/README.md
 
-# Composer-managed code (rebuilt in the image)
-/app/vendor/
-/app/web/core/
-/app/web/modules/contrib/
-/app/web/themes/contrib/
-/app/web/profiles/contrib/
-/app/web/libraries/
-/app/recipes/
-
-# Scaffolded files
-/app/web/*
-!/app/web/modules/
-!/app/web/themes/
-!/app/web/sites/
-/app/web/sites/*
-!/app/web/sites/default/
-/app/web/sites/default/*
-!/app/web/sites/default/settings.php
-!/app/web/sites/default/services.redis.yml
-
-# Build artifacts
 *.tar
