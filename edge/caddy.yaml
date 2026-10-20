@@ -1,0 +1,75 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: caddy-data
+  labels: {app.kubernetes.io/name: caddy}
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: local-path
+  resources:
+    requests: {storage: 1Gi}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: caddy
+  labels: {app.kubernetes.io/name: caddy}
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  # hostPorts can't be shared, so the old pod must stop first.
+  strategy: {type: Recreate}
+  selector:
+    matchLabels: {app.kubernetes.io/name: caddy}
+  template:
+    metadata:
+      labels: {app.kubernetes.io/name: caddy, app.kubernetes.io/component: edge}
+    spec:
+      enableServiceLinks: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile: {type: RuntimeDefault}
+        # Lets the non-root process bind 80/443 without any capability.
+        sysctls:
+          - {name: net.ipv4.ip_unprivileged_port_start, value: "0"}
+      containers:
+        - name: caddy
+          image: localhost/stagecoach/caddy
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef: {name: cloudflare-ips}
+          env:
+            - name: CF_API_TOKEN
+              valueFrom: {secretKeyRef: {name: cloudflare-api-token, key: token}}
+          ports:
+            - {name: http, containerPort: 80, hostPort: 80, protocol: TCP}
+            - {name: https, containerPort: 443, hostPort: 443, protocol: TCP}
+            - {name: health, containerPort: 8081}
+          readinessProbe:
+            httpGet: {path: /healthz, port: health}
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: {path: /healthz, port: health}
+            periodSeconds: 20
+          resources:
+            requests: {cpu: 50m, memory: 32Mi}
+            limits: {memory: 128Mi}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: [ALL]}
+          volumeMounts:
+            - {name: config, mountPath: /etc/caddy, readOnly: true}
+            - {name: data, mountPath: /data}
+            - {name: runtime-config, mountPath: /config}
+      volumes:
+        - name: config
+          configMap: {name: caddy-config}
+        - name: data
+          persistentVolumeClaim: {claimName: caddy-data}
+        - name: runtime-config
+          emptyDir: {sizeLimit: 16Mi}

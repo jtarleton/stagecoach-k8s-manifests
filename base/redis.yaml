@@ -1,0 +1,71 @@
+# Cache only: no persistence, evicts least-recently-used keys when full.
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  labels: {app.kubernetes.io/name: redis}
+spec:
+  selector: {app.kubernetes.io/name: redis}
+  ports:
+    - {name: redis, port: 6379, targetPort: redis}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  labels: {app.kubernetes.io/name: redis}
+spec:
+  replicas: 1
+  strategy: {type: Recreate}
+  selector:
+    matchLabels: {app.kubernetes.io/name: redis}
+  template:
+    metadata:
+      labels: {app.kubernetes.io/name: redis, app.kubernetes.io/component: cache}
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        runAsGroup: 1000
+        seccompProfile: {type: RuntimeDefault}
+      containers:
+        - name: redis
+          image: docker.io/library/redis:8.2.9-alpine
+          # The password lives in a secret-mounted config file, not in argv.
+          args:
+            - /etc/redis/auth.conf
+            - --maxmemory
+            - 48mb
+            - --maxmemory-policy
+            - allkeys-lru
+            - --lazyfree-lazy-eviction
+            - "yes"
+            - --save
+            - ""
+            - --appendonly
+            - "no"
+          ports:
+            - {name: redis, containerPort: 6379}
+          readinessProbe:
+            tcpSocket: {port: redis}
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket: {port: redis}
+            periodSeconds: 20
+          resources:
+            requests: {cpu: 25m, memory: 32Mi}
+            limits: {memory: 96Mi}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: [ALL]}
+          volumeMounts:
+            - {name: auth, mountPath: /etc/redis, readOnly: true}
+            - {name: data, mountPath: /data}
+      volumes:
+        - name: auth
+          secret:
+            secretName: redis-auth
+            items: [{key: auth.conf, path: auth.conf}]
+        - name: data
+          emptyDir: {sizeLimit: 64Mi}

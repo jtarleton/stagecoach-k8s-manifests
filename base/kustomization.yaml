@@ -27,6 +27,7 @@ configMapGenerator:
       - DRUPAL_TRUSTED_HOSTS=stagecoach.sh
       - DRUPAL_REVERSE_PROXY_ADDRESSES=10.42.0.0/16
       - FRANKENPHP_NUM_THREADS=4
+      - DRUSH_OPTIONS_URI=https://stagecoach.sh
 images:
   - name: localhost/stagecoach/drupal
-    newTag: "unbuilt"
+    newTag: "202610192347-a7f92d1"

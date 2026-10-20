@@ -1,0 +1,59 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: drupal-cron
+  labels: {app.kubernetes.io/name: drupal-cron}
+spec:
+  schedule: "*/15 * * * *"
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 300
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      activeDeadlineSeconds: 600
+      ttlSecondsAfterFinished: 3600
+      template:
+        metadata:
+          labels: {app.kubernetes.io/name: drupal-cron, app.kubernetes.io/component: cron, stagecoach.sh/php: "true"}
+        spec:
+          restartPolicy: Never
+          enableServiceLinks: false
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            fsGroup: 1000
+            fsGroupChangePolicy: OnRootMismatch
+            seccompProfile: {type: RuntimeDefault}
+          containers:
+            - name: drush
+              image: localhost/stagecoach/drupal
+              imagePullPolicy: IfNotPresent
+              command: [drush, cron, --quiet]
+              envFrom:
+                - configMapRef: {name: drupal-env}
+              env:
+                - name: DB_PASSWORD
+                  valueFrom: {secretKeyRef: {name: mariadb, key: password}}
+                - name: DRUPAL_HASH_SALT
+                  valueFrom: {secretKeyRef: {name: drupal, key: hash-salt}}
+                - name: REDIS_PASSWORD
+                  valueFrom: {secretKeyRef: {name: redis-auth, key: password}}
+              resources:
+                requests: {cpu: 50m, memory: 128Mi}
+                limits: {memory: 384Mi}
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities: {drop: [ALL]}
+              volumeMounts:
+                - {name: files, mountPath: /app/web/sites/default/files, subPath: public}
+                - {name: files, mountPath: /app/private, subPath: private}
+                - {name: tmp, mountPath: /tmp}
+          volumes:
+            - name: files
+              persistentVolumeClaim: {claimName: drupal-files}
+            - name: tmp
+              emptyDir: {sizeLimit: 512Mi}

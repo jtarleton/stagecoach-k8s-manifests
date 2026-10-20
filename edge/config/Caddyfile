@@ -1,0 +1,57 @@
+# Edge: TLS termination (Let's Encrypt via Cloudflare DNS-01), visitor-IP
+# recovery from Cloudflare, security headers, then on to Varnish.
+{
+	email support@stagecoach.sh
+	acme_dns cloudflare {env.CF_API_TOKEN}
+	admin off
+
+	servers {
+		# Only Cloudflare's addresses may tell us who the visitor is.
+		trusted_proxies static {$CF_IP_RANGES}
+		client_ip_headers Cf-Connecting-Ip
+	}
+}
+
+(cloudflare_only) {
+	# Belt and braces with the NetworkPolicy: drop anything not from Cloudflare.
+	@direct not remote_ip {$CF_IP_RANGES}
+	abort @direct
+}
+
+stagecoach.sh {
+	import cloudflare_only
+
+	# Cache invalidation is internal-only.
+	@purge method PURGE BAN
+	respond @purge 405
+
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		-Server
+	}
+
+	reverse_proxy varnish.stagecoach.svc.cluster.local:80 {
+		# Hand Drupal the real visitor IP, not Cloudflare's.
+		header_up X-Forwarded-For {client_ip}
+		header_up X-Real-IP {client_ip}
+	}
+
+	log {
+		output stdout
+		format json
+	}
+}
+
+www.stagecoach.sh {
+	import cloudflare_only
+	redir https://stagecoach.sh{uri} permanent
+}
+
+# Kubernetes probes (not exposed outside the pod network).
+http://:8081 {
+	respond /healthz "ok" 200
+}

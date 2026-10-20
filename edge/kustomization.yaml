@@ -12,6 +12,8 @@ resources:
 configMapGenerator:
   - name: caddy-config
     files: [Caddyfile=config/Caddyfile]
+  - name: cloudflare-ips
+    envs: [config/cloudflare.env]
 images:
   - name: localhost/stagecoach/caddy
     newTag: "unbuilt"

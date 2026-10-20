@@ -1,0 +1,11 @@
+# Binding host ports 80/443 isn't allowed by the baseline/restricted Pod
+# Security levels, so the edge lives in its own namespace. The pod itself
+# still meets "restricted" apart from hostPort (see warn/audit labels).
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: stagecoach-edge
+  labels:
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/warn: restricted
+    pod-security.kubernetes.io/audit: restricted

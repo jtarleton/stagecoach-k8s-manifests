@@ -1,0 +1,84 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: varnish
+  labels: {app.kubernetes.io/name: varnish}
+spec:
+  selector: {app.kubernetes.io/name: varnish}
+  ports:
+    - {name: http, port: 80, targetPort: http}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: varnish
+  labels: {app.kubernetes.io/name: varnish}
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels: {app.kubernetes.io/name: varnish}
+  template:
+    metadata:
+      labels: {app.kubernetes.io/name: varnish, app.kubernetes.io/component: cache}
+    spec:
+      enableServiceLinks: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile: {type: RuntimeDefault}
+      containers:
+        - name: varnish
+          image: docker.io/library/varnish:8.0.2-alpine
+          env:
+            - {name: VARNISH_HTTP_PORT, value: "8080"}
+            - {name: VARNISH_SIZE, value: 64M}
+          # Flags appended to the image's varnishd command line. One small
+          # thread pool instead of 2x100 idle threads; header limits raised
+          # because Drupal's Cache-Tags header can be large.
+          args:
+            - -p
+            - thread_pools=1
+            - -p
+            - thread_pool_min=10
+            - -p
+            - thread_pool_max=200
+            - -p
+            - http_resp_hdr_len=65536
+            - -p
+            - http_resp_size=98304
+            - -p
+            - http_req_hdr_len=65536
+            - -p
+            - http_req_size=98304
+            - -p
+            - workspace_backend=256k
+            - -p
+            - workspace_client=256k
+          ports:
+            - {name: http, containerPort: 8080}
+          readinessProbe:
+            httpGet: {path: /varnish-health, port: http}
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: {path: /varnish-health, port: http}
+            periodSeconds: 20
+          resources:
+            requests: {cpu: 50m, memory: 96Mi}
+            limits: {memory: 192Mi}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: [ALL]}
+          volumeMounts:
+            - {name: vcl, mountPath: /etc/varnish/default.vcl, subPath: default.vcl, readOnly: true}
+            - {name: workdir, mountPath: /var/lib/varnish}
+            - {name: tmp, mountPath: /tmp}
+      volumes:
+        - name: vcl
+          configMap: {name: varnish-vcl}
+        - name: workdir
+          emptyDir: {sizeLimit: 256Mi}
+        - name: tmp
+          emptyDir: {sizeLimit: 64Mi}

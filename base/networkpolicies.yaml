@@ -1,0 +1,59 @@
+# Default deny: every pod in the namespace only accepts traffic explicitly allowed.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+spec:
+  podSelector: {}
+  policyTypes: [Ingress]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: mariadb-from-php
+spec:
+  podSelector:
+    matchLabels: {app.kubernetes.io/name: mariadb}
+  ingress:
+    - from:
+        - podSelector: {matchLabels: {stagecoach.sh/php: "true"}}
+      ports: [{port: 3306}]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: redis-from-php
+spec:
+  podSelector:
+    matchLabels: {app.kubernetes.io/name: redis}
+  ingress:
+    - from:
+        - podSelector: {matchLabels: {stagecoach.sh/php: "true"}}
+      ports: [{port: 6379}]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: drupal-from-varnish
+spec:
+  podSelector:
+    matchLabels: {app.kubernetes.io/name: drupal}
+  ingress:
+    - from:
+        - podSelector: {matchLabels: {app.kubernetes.io/name: varnish}}
+      ports: [{port: 8080}]
+---
+# Varnish: page requests from the edge Caddy, purge requests from Drupal.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: varnish-from-edge-and-php
+spec:
+  podSelector:
+    matchLabels: {app.kubernetes.io/name: varnish}
+  ingress:
+    - from:
+        - namespaceSelector: {matchLabels: {kubernetes.io/metadata.name: stagecoach-edge}}
+          podSelector: {matchLabels: {app.kubernetes.io/name: caddy}}
+        - podSelector: {matchLabels: {stagecoach.sh/php: "true"}}
+      ports: [{port: 8080}]
