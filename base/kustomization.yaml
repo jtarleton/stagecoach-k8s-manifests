@@ -30,4 +30,4 @@ configMapGenerator:
       - DRUSH_OPTIONS_URI=https://stagecoach.sh
 images:
   - name: localhost/stagecoach/drupal
-    newTag: "202610200003-d302a9f"
+    newTag: "202610200045-62f517b"

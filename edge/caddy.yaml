@@ -51,9 +51,11 @@ spec:
             - {name: health, containerPort: 8081}
           readinessProbe:
             httpGet: {path: /healthz, port: health}
+            timeoutSeconds: 3
             periodSeconds: 10
           livenessProbe:
             httpGet: {path: /healthz, port: health}
+            timeoutSeconds: 3
             periodSeconds: 20
           resources:
             requests: {cpu: 50m, memory: 32Mi}
