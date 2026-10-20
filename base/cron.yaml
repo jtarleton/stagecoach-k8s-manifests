@@ -41,6 +41,8 @@ spec:
                   valueFrom: {secretKeyRef: {name: drupal, key: hash-salt}}
                 - name: REDIS_PASSWORD
                   valueFrom: {secretKeyRef: {name: redis-auth, key: password}}
+                - name: SMTP_PASSWORD
+                  valueFrom: {secretKeyRef: {name: smtp, key: password, optional: true}}
               resources:
                 requests: {cpu: 50m, memory: 128Mi}
                 limits: {memory: 384Mi}
