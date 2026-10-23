@@ -1,0 +1,102 @@
+# The Stagecoach control plane (github.com/jtarleton/stagecoach): the HTTP API
+# the drupal/stage_coach module calls, plus its reconcile loop and scheduler.
+# In-cluster only — a ClusterIP Service, reachable from the Drupal pods at
+# http://stage-coach.stage-coach.svc:8080 and nowhere else (see networkpolicy.yaml).
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  namespace: stage-coach
+  name: stage-coach-db
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: local-path
+  resources:
+    requests: {storage: 1Gi}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: stage-coach
+  name: stage-coach
+  labels: {app.kubernetes.io/name: stage-coach}
+spec:
+  selector: {app.kubernetes.io/name: stage-coach}
+  ports:
+    - {name: http, port: 8080, targetPort: http}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: stage-coach
+  name: stage-coach
+  labels: {app.kubernetes.io/name: stage-coach}
+spec:
+  replicas: 1
+  # SQLite is a single writer: never let an old and a new pod overlap.
+  strategy: {type: Recreate}
+  selector:
+    matchLabels: {app.kubernetes.io/name: stage-coach}
+  template:
+    metadata:
+      labels: {app.kubernetes.io/name: stage-coach}
+    spec:
+      serviceAccountName: stage-coach
+      enableServiceLinks: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532        # distroless "nonroot"
+        runAsGroup: 65532
+        fsGroup: 65532          # so the PVC is writable
+        seccompProfile: {type: RuntimeDefault}
+      initContainers:
+        # Register this cluster's environment before serve starts; without it
+        # serve would seed the original jamestarleton.com defaults. Idempotent.
+        - name: register-env
+          image: localhost/stagecoach/stage-coach
+          imagePullPolicy: IfNotPresent
+          args: [env, -db=/data/stage-coach.db, -env=prod, -rank=30,
+                 -namespace=stagecoach, -host=stagecoach.sh, -prod]
+          volumeMounts: [{name: db, mountPath: /data}]
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: [ALL]}
+          resources:
+            requests: {cpu: 10m, memory: 16Mi}
+            limits: {memory: 64Mi}
+      containers:
+        - name: stage-coach
+          image: localhost/stagecoach/stage-coach
+          imagePullPolicy: IfNotPresent
+          # The Drupal Deployment here is "drupal", its container "frankenphp".
+          args: [serve, -addr=:8080, -db=/data/stage-coach.db, -workload=drupal, -container=frankenphp]
+          env:
+            # user:password for HTTP Basic auth on the bundled web UI.
+            - name: STAGE_COACH_AUTH
+              valueFrom: {secretKeyRef: {name: stage-coach, key: auth}}
+            # Bearer token for /api/* and /events: what the Drupal module sends.
+            - name: STAGE_COACH_API_TOKEN
+              valueFrom: {secretKeyRef: {name: stage-coach, key: api-token}}
+            - name: STAGE_COACH_RELEASE_TOKEN
+              valueFrom: {secretKeyRef: {name: stage-coach, key: release-token, optional: true}}
+            - {name: GOMEMLIMIT, value: 100MiB}
+          ports:
+            - {name: http, containerPort: 8080}
+          volumeMounts: [{name: db, mountPath: /data}]
+          readinessProbe:
+            httpGet: {path: /healthz, port: http}   # exempt from auth
+            initialDelaySeconds: 3
+          livenessProbe:
+            httpGet: {path: /healthz, port: http}
+            initialDelaySeconds: 10
+            periodSeconds: 20
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: [ALL]}
+          resources:
+            requests: {cpu: 10m, memory: 48Mi}
+            limits: {memory: 160Mi}
+      volumes:
+        - name: db
+          persistentVolumeClaim: {claimName: stage-coach-db}

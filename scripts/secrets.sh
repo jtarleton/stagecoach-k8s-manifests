@@ -13,7 +13,7 @@ create() { # namespace name --from-literal...
   echo "secret $ns/$name created"
 }
 
-kubectl apply -f base/namespace.yaml -f edge/namespace.yaml >/dev/null
+kubectl apply -f base/namespace.yaml -f edge/namespace.yaml -f control/namespace.yaml >/dev/null
 
 create stagecoach mariadb \
   --from-literal=password="$(rand 32)" --from-literal=root-password="$(rand 32)"
@@ -22,6 +22,18 @@ create stagecoach drupal \
 redis_pw=$(rand 32)
 create stagecoach redis-auth \
   --from-literal=password="$redis_pw" --from-literal=auth.conf="requirepass $redis_pw"
+
+# Stagecoach: Basic auth for its own UI, and the API token the Drupal module
+# sends. The token lives in both namespaces — stage-coach checks it, Drupal reads
+# it as STAGE_COACH_API_TOKEN — so it is minted once and copied, never re-minted
+# on one side only.
+create stage-coach stage-coach \
+  --from-literal=auth="admin:$(rand 32)" --from-literal=api-token="$(rand 48)"
+if ! exists stagecoach stage-coach-api; then
+  kubectl -n stage-coach get secret stage-coach -o jsonpath='{.data.api-token}' | base64 -d \
+    | kubectl -n stagecoach create secret generic stage-coach-api --from-file=token=/dev/stdin >/dev/null
+  echo "secret stagecoach/stage-coach-api created (copy of the Stagecoach API token)"
+fi
 
 token_file=secrets/cloudflare-api-token
 if [ -s "$token_file" ]; then
