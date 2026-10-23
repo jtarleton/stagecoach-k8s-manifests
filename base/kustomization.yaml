@@ -29,6 +29,7 @@ configMapGenerator:
       - DRUPAL_REVERSE_PROXY_ADDRESSES=10.42.0.0/16
       - FRANKENPHP_NUM_THREADS=4
       - DRUSH_OPTIONS_URI=https://stagecoach.sh
+      - STAGE_COACH_URL=http://stage-coach.stage-coach.svc:8080
 images:
   - name: localhost/stagecoach/drupal
-    newTag: "202610231619-fd61fd3"
+    newTag: "202610231751-ce60d72"

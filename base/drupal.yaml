@@ -64,6 +64,9 @@ spec:
               valueFrom: {secretKeyRef: {name: shield, key: user, optional: true}}
             - name: SHIELD_PASS
               valueFrom: {secretKeyRef: {name: shield, key: pass, optional: true}}
+            # drupal/stage_coach -> the Stagecoach API (control/); minted by secrets.sh.
+            - name: STAGE_COACH_API_TOKEN
+              valueFrom: {secretKeyRef: {name: stage-coach-api, key: token, optional: true}}
           ports:
             - {name: http, containerPort: 8080}
           startupProbe:
