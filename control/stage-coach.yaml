@@ -41,6 +41,9 @@ spec:
       labels: {app.kubernetes.io/name: stage-coach}
     spec:
       serviceAccountName: stage-coach
+      # CI's private ghcr image; the pull secret is created by hand, not in git:
+      #   kubectl -n stage-coach create secret docker-registry ghcr --docker-server=ghcr.io ...
+      imagePullSecrets: [{name: ghcr}]
       enableServiceLinks: false
       securityContext:
         runAsNonRoot: true
@@ -52,7 +55,7 @@ spec:
         # Register this cluster's environment before serve starts; without it
         # serve would seed the original jamestarleton.com defaults. Idempotent.
         - name: register-env
-          image: localhost/stagecoach/stage-coach
+          image: ghcr.io/jtarleton/stagecoach
           imagePullPolicy: IfNotPresent
           args: [env, -db=/data/stage-coach.db, -env=prod, -rank=30,
                  -namespace=stagecoach, -host=stagecoach.sh, -prod]
@@ -66,7 +69,7 @@ spec:
             limits: {memory: 64Mi}
       containers:
         - name: stage-coach
-          image: localhost/stagecoach/stage-coach
+          image: ghcr.io/jtarleton/stagecoach
           imagePullPolicy: IfNotPresent
           # The Drupal Deployment here is "drupal", its container "frankenphp".
           args: [serve, -addr=:8080, -db=/data/stage-coach.db, -workload=drupal, -container=frankenphp]
