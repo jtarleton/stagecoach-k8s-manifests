@@ -11,4 +11,5 @@ resources:
   - networkpolicy.yaml
 images:
   - name: ghcr.io/jtarleton/stagecoach
-    newTag: "936b73dc5894b0e6dd3361b4d0b8a678a03bc971"
+    # CI build of jtarleton/stagecoach d73af2b (feat/cluster-layout).
+    digest: sha256:40230d77b2492628bbeadf848ba68211aa592bf54d872e3d198fe86a40008bc7
