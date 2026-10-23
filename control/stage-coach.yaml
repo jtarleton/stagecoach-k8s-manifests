@@ -13,6 +13,19 @@ spec:
   resources:
     requests: {storage: 1Gi}
 ---
+# Database snapshots Stagecoach takes (pre-deploy, on demand), in the site's own
+# namespace so its Jobs can mount it. Separate from the nightly db-backups claim.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  namespace: stagecoach
+  name: stage-coach-snapshots
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: local-path
+  resources:
+    requests: {storage: 2Gi}
+---
 apiVersion: v1
 kind: Service
 metadata:
@@ -82,6 +95,14 @@ spec:
               valueFrom: {secretKeyRef: {name: stage-coach, key: api-token}}
             - name: STAGE_COACH_RELEASE_TOKEN
               valueFrom: {secretKeyRef: {name: stage-coach, key: release-token, optional: true}}
+            # This cluster's layout (see stagecoach docs/manual.md, "Cluster layout"):
+            # Jobs borrow the drupal container's env, volumes and security
+            # contexts, carry the label mariadb's NetworkPolicy admits, and keep
+            # snapshots on a claim in the site's namespace (no object storage).
+            - {name: STAGE_COACH_JOBS_LIKE_WORKLOAD, value: "true"}
+            - {name: STAGE_COACH_JOB_LABELS, value: "stagecoach.sh/php=true"}
+            - {name: STAGE_COACH_SNAPSHOT_STORE, value: "pvc://stage-coach-snapshots"}
+            - {name: STAGE_COACH_MARIADB_IMAGE, value: "docker.io/library/mariadb:11.8.8"}
             - {name: GOMEMLIMIT, value: 100MiB}
           ports:
             - {name: http, containerPort: 8080}
@@ -89,10 +110,17 @@ spec:
           readinessProbe:
             httpGet: {path: /healthz, port: http}   # exempt from auth
             initialDelaySeconds: 3
+            timeoutSeconds: 5
+          # Generous: a liveness kill mid-operation abandons the operation's
+          # goroutine (the Jobs survive, but the deploy's own sequencing does
+          # not), and on this 1-vCPU node /healthz can miss a 1s default
+          # timeout while a dump or a PHP job holds the CPU.
           livenessProbe:
             httpGet: {path: /healthz, port: http}
             initialDelaySeconds: 10
-            periodSeconds: 20
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 6
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
