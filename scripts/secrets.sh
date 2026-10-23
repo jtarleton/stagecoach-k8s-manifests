@@ -15,13 +15,18 @@ create() { # namespace name --from-literal...
 
 kubectl apply -f base/namespace.yaml -f edge/namespace.yaml -f control/namespace.yaml >/dev/null
 
-create stagecoach mariadb \
-  --from-literal=password="$(rand 32)" --from-literal=root-password="$(rand 32)"
-create stagecoach drupal \
-  --from-literal=hash-salt="$(rand 64)" --from-literal=admin-password="$(rand 24)"
-redis_pw=$(rand 32)
-create stagecoach redis-auth \
-  --from-literal=password="$redis_pw" --from-literal=auth.conf="requirepass $redis_pw"
+# The site's own secrets, for prod and for dev (dev/, its own values: a
+# copy-down brings prod's data, never prod's credentials).
+kubectl create namespace stagecoach-dev --dry-run=client -o yaml | kubectl apply -f - >/dev/null
+for ns in stagecoach stagecoach-dev; do
+  create $ns mariadb \
+    --from-literal=password="$(rand 32)" --from-literal=root-password="$(rand 32)"
+  create $ns drupal \
+    --from-literal=hash-salt="$(rand 64)" --from-literal=admin-password="$(rand 24)"
+  redis_pw=$(rand 32)
+  create $ns redis-auth \
+    --from-literal=password="$redis_pw" --from-literal=auth.conf="requirepass $redis_pw"
+done
 
 # Stagecoach: Basic auth for its own UI, and the API token the Drupal module
 # sends. The token lives in both namespaces — stage-coach checks it, Drupal reads

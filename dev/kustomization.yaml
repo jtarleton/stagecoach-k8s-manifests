@@ -1,0 +1,41 @@
+# dev: the same stack as base/ in its own namespace, for Stagecoach copy-downs
+# and restores that must not touch production. In-cluster only (no edge route),
+# no nightly backup, no cron. Populate it with a copy-down from prod.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: stagecoach-dev
+resources:
+  - ../base
+patches:
+  - target: {kind: Namespace, name: stagecoach}
+    patch: |-
+      - op: replace
+        path: /metadata/name
+        value: stagecoach-dev
+  - patch: |-
+      $patch: delete
+      apiVersion: batch/v1
+      kind: CronJob
+      metadata: {name: drupal-cron}
+  - patch: |-
+      $patch: delete
+      apiVersion: batch/v1
+      kind: CronJob
+      metadata: {name: db-backup}
+  - patch: |-
+      $patch: delete
+      apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata: {name: db-backups}
+  - patch: |-
+      $patch: delete
+      apiVersion: networking.k8s.io/v1
+      kind: NetworkPolicy
+      metadata: {name: mariadb-from-backup}
+configMapGenerator:
+  - name: drupal-env
+    behavior: merge
+    literals:
+      - DRUPAL_TRUSTED_HOSTS=dev.stagecoach.sh,localhost
+      - DRUSH_OPTIONS_URI=http://dev.stagecoach.sh
+      - FRANKENPHP_NUM_THREADS=2

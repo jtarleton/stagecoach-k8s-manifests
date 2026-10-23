@@ -22,3 +22,20 @@ spec:
         - namespaceSelector: {matchLabels: {kubernetes.io/metadata.name: stagecoach}}
           podSelector: {matchLabels: {stagecoach.sh/php: "true"}}
       ports: [{port: 8080}]
+---
+# Copy-down prod -> dev: Stagecoach's Jobs in stagecoach-dev dump prod's
+# database with a read-only user (secret stage-coach-source-stagecoach there,
+# made by scripts/copy-source.sh). Only those Jobs, only to mariadb.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  namespace: stagecoach
+  name: mariadb-from-dev-copy-down
+spec:
+  podSelector:
+    matchLabels: {app.kubernetes.io/name: mariadb}
+  ingress:
+    - from:
+        - namespaceSelector: {matchLabels: {kubernetes.io/metadata.name: stagecoach-dev}}
+          podSelector: {matchLabels: {app.kubernetes.io/managed-by: stage-coach}}
+      ports: [{port: 3306}]

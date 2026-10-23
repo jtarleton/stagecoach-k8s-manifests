@@ -27,6 +27,17 @@ spec:
     requests: {storage: 2Gi}
 ---
 apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  namespace: stagecoach-dev
+  name: stage-coach-snapshots
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: local-path
+  resources:
+    requests: {storage: 2Gi}
+---
+apiVersion: v1
 kind: Service
 metadata:
   namespace: stage-coach
@@ -72,6 +83,19 @@ spec:
           imagePullPolicy: IfNotPresent
           args: [env, -db=/data/stage-coach.db, -env=prod, -rank=30,
                  -namespace=stagecoach, -host=stagecoach.sh, -prod]
+          volumeMounts: [{name: db, mountPath: /data}]
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: [ALL]}
+          resources:
+            requests: {cpu: 10m, memory: 16Mi}
+            limits: {memory: 64Mi}
+        - name: register-env-dev
+          image: ghcr.io/jtarleton/stagecoach
+          imagePullPolicy: IfNotPresent
+          args: [env, -db=/data/stage-coach.db, -env=dev, -rank=10,
+                 -namespace=stagecoach-dev, -host=dev.stagecoach.sh]
           volumeMounts: [{name: db, mountPath: /data}]
           securityContext:
             allowPrivilegeEscalation: false
