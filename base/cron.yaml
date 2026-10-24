@@ -57,6 +57,9 @@ spec:
                   valueFrom: {secretKeyRef: {name: shield, key: user, optional: true}}
                 - name: SHIELD_PASS
                   valueFrom: {secretKeyRef: {name: shield, key: pass, optional: true}}
+                # stagecoach_portal's cron retries queued tenant syncs to Go.
+                - name: STAGECOACH_GO_SERVICE_TOKEN
+                  valueFrom: {secretKeyRef: {name: stagecoach-go-service, key: token, optional: true}}
               resources:
                 requests: {cpu: 50m, memory: 128Mi}
                 limits: {memory: 384Mi}

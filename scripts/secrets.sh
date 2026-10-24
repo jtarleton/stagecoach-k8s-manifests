@@ -33,7 +33,21 @@ done
 # it as STAGE_COACH_API_TOKEN — so it is minted once and copied, never re-minted
 # on one side only.
 create stage-coach stage-coach \
-  --from-literal=auth="admin:$(rand 32)" --from-literal=api-token="$(rand 48)"
+  --from-literal=auth="admin:$(rand 32)" --from-literal=api-token="$(rand 48)" \
+  --from-literal=portal-token="$(rand 48)"
+# Secrets made before the portal API existed lack its token: add it once.
+if [ -z "$(kubectl -n stage-coach get secret stage-coach -o jsonpath='{.data.portal-token}')" ]; then
+  kubectl -n stage-coach patch secret stage-coach --type merge \
+    -p "{\"stringData\":{\"portal-token\":\"$(rand 48)\"}}" >/dev/null
+  echo "secret stage-coach/stage-coach: portal-token added"
+fi
+# The portal's copy, read by Drupal's Key module as STAGECOACH_GO_SERVICE_TOKEN.
+# Prod only: dev keeps the portal on its fake client.
+if ! exists stagecoach stagecoach-go-service; then
+  kubectl -n stage-coach get secret stage-coach -o jsonpath='{.data.portal-token}' | base64 -d \
+    | kubectl -n stagecoach create secret generic stagecoach-go-service --from-file=token=/dev/stdin >/dev/null
+  echo "secret stagecoach/stagecoach-go-service created (copy of the portal token)"
+fi
 if ! exists stagecoach stage-coach-api; then
   kubectl -n stage-coach get secret stage-coach -o jsonpath='{.data.api-token}' | base64 -d \
     | kubectl -n stagecoach create secret generic stage-coach-api --from-file=token=/dev/stdin >/dev/null

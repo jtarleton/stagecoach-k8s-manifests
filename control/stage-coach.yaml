@@ -117,6 +117,10 @@ spec:
             # Bearer token for /api/* and /events: what the Drupal module sends.
             - name: STAGE_COACH_API_TOKEN
               valueFrom: {secretKeyRef: {name: stage-coach, key: api-token}}
+            # Bearer token for the portal's tenancy API (/v1/tenants); the
+            # stagecoach_portal module holds the copy (stagecoach/stagecoach-go-service).
+            - name: STAGE_COACH_PORTAL_TOKEN
+              valueFrom: {secretKeyRef: {name: stage-coach, key: portal-token, optional: true}}
             - name: STAGE_COACH_RELEASE_TOKEN
               valueFrom: {secretKeyRef: {name: stage-coach, key: release-token, optional: true}}
             # This cluster's layout (see stagecoach docs/manual.md, "Cluster layout"):

@@ -67,6 +67,10 @@ spec:
             # drupal/stage_coach -> the Stagecoach API (control/); minted by secrets.sh.
             - name: STAGE_COACH_API_TOKEN
               valueFrom: {secretKeyRef: {name: stage-coach-api, key: token, optional: true}}
+            # stagecoach_portal -> Stagecoach's tenancy API (/v1); the Key module
+            # reads it. Absent (dev), the portal keeps its fake client.
+            - name: STAGECOACH_GO_SERVICE_TOKEN
+              valueFrom: {secretKeyRef: {name: stagecoach-go-service, key: token, optional: true}}
           ports:
             - {name: http, containerPort: 8080}
           startupProbe:

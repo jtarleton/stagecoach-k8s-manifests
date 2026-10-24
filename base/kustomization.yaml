@@ -30,6 +30,7 @@ configMapGenerator:
       - FRANKENPHP_NUM_THREADS=4
       - DRUSH_OPTIONS_URI=https://stagecoach.sh
       - STAGE_COACH_URL=http://stage-coach.stage-coach.svc:8080
+      - STAGECOACH_GO_URL=http://stage-coach.stage-coach.svc:8080
 images:
   - name: localhost/stagecoach/drupal
-    newTag: "202610231751-ce60d72"
+    newTag: "202610240005-d810797"
