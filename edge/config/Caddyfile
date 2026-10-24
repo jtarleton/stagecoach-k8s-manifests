@@ -46,6 +46,51 @@ stagecoach.sh {
 	}
 }
 
+# The stagecoach.sh agent API, for customers' clusters. Only /v1/agent/* is
+# public: /v1/tenants takes the portal's token, which acts on any tenant, and
+# /api runs operations — neither ever leaves the cluster.
+api.stagecoach.sh {
+	import cloudflare_only
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		-Server
+	}
+
+	@agent path /v1/agent/*
+	handle @agent {
+		request_body {
+			max_size 64KB
+		}
+		reverse_proxy stage-coach.stage-coach.svc.cluster.local:8080 {
+			header_up X-Forwarded-For {client_ip}
+			header_up X-Real-IP {client_ip}
+		}
+	}
+	handle {
+		header Content-Type application/json
+		respond `{"error":{"code":"not_found","message":"not an agent API path"}}` 404
+	}
+
+	log {
+		output stdout
+		format json
+	}
+}
+
+# Helm chart repository: helm repo add stagecoach https://charts.stagecoach.sh
+charts.stagecoach.sh {
+	import cloudflare_only
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		Cache-Control "public, max-age=300"
+		-Server
+	}
+	root * /srv/charts
+	file_server
+}
+
 www.stagecoach.sh {
 	import cloudflare_only
 	redir https://stagecoach.sh{uri} permanent

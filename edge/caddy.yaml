@@ -66,11 +66,14 @@ spec:
             capabilities: {drop: [ALL]}
           volumeMounts:
             - {name: config, mountPath: /etc/caddy, readOnly: true}
+            - {name: charts, mountPath: /srv/charts, readOnly: true}
             - {name: data, mountPath: /data}
             - {name: runtime-config, mountPath: /config}
       volumes:
         - name: config
           configMap: {name: caddy-config}
+        - name: charts
+          configMap: {name: helm-charts}
         - name: data
           persistentVolumeClaim: {claimName: caddy-data}
         - name: runtime-config

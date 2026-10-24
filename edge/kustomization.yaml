@@ -14,6 +14,11 @@ configMapGenerator:
     files: [Caddyfile=config/Caddyfile]
   - name: cloudflare-ips
     envs: [config/cloudflare.env]
+  # The Helm repository served at charts.stagecoach.sh (scripts/build-charts.sh).
+  - name: helm-charts
+    files:
+      - charts/index.yaml
+      - charts/stagecoach-agent-0.1.0.tgz
 images:
   - name: localhost/stagecoach/caddy
     newTag: "202610200041-ee158ce-dirty"

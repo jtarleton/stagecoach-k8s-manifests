@@ -1,8 +1,10 @@
-# Rendered from github.com/jtarleton/stagecoach deploy/helm/stagecoach-agent (feat/agent, 1b23f23):
-#   helm template stagecoach-agent deploy/helm/stagecoach-agent -n stagecoach-agent \
-#     --set clusterName=crystalbit-us --set provider=Vultr --set server=http://stage-coach.stage-coach.svc:8080 \
-#     --set existingSecret=stagecoach-agent-token --set image.digest=<digest> --set imagePullSecrets[0].name=ghcr
-# The token secret is minted from the portal (sc-admin org), never committed.
+# Rendered from the published chart repository (what a customer runs):
+#   helm repo add stagecoach https://charts.stagecoach.sh
+#   helm template stagecoach-agent stagecoach/stagecoach-agent -n stagecoach-agent \
+#     --set clusterName=crystalbit-us --set provider=Vultr \
+#     --set existingSecret=stagecoach-agent-token --set imagePullSecrets[0].name=ghcr
+# It reports via https://api.stagecoach.sh (Cloudflare -> edge -> stage-coach), as any
+# customer cluster does. The token secret is minted from the portal (sc-admin), never committed.
 ---
 # Source: stagecoach-agent/templates/rbac.yaml
 # The agent reads, cluster-wide, exactly what it reports: nodes (and whether
@@ -16,7 +18,7 @@ metadata:
   labels:
     app.kubernetes.io/name: stagecoach-agent
     app.kubernetes.io/instance: stagecoach-agent
-    app.kubernetes.io/version: "0.1.0"
+    app.kubernetes.io/version: "1b23f23eee1dfce5bd812569e085f3dbba03742d"
 ---
 # Source: stagecoach-agent/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -26,7 +28,7 @@ metadata:
   labels:
     app.kubernetes.io/name: stagecoach-agent
     app.kubernetes.io/instance: stagecoach-agent
-    app.kubernetes.io/version: "0.1.0"
+    app.kubernetes.io/version: "1b23f23eee1dfce5bd812569e085f3dbba03742d"
 rules:
   - apiGroups: [""]
     resources: [nodes, pods, namespaces]
@@ -40,7 +42,7 @@ metadata:
   labels:
     app.kubernetes.io/name: stagecoach-agent
     app.kubernetes.io/instance: stagecoach-agent
-    app.kubernetes.io/version: "0.1.0"
+    app.kubernetes.io/version: "1b23f23eee1dfce5bd812569e085f3dbba03742d"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -59,7 +61,7 @@ metadata:
   labels:
     app.kubernetes.io/name: stagecoach-agent
     app.kubernetes.io/instance: stagecoach-agent
-    app.kubernetes.io/version: "0.1.0"
+    app.kubernetes.io/version: "1b23f23eee1dfce5bd812569e085f3dbba03742d"
 spec:
   replicas: 1
   strategy: {type: Recreate}
@@ -70,7 +72,7 @@ spec:
       labels:
         app.kubernetes.io/name: stagecoach-agent
         app.kubernetes.io/instance: stagecoach-agent
-        app.kubernetes.io/version: "0.1.0"
+        app.kubernetes.io/version: "1b23f23eee1dfce5bd812569e085f3dbba03742d"
     spec:
       serviceAccountName: stagecoach-agent
       enableServiceLinks: false
@@ -83,11 +85,11 @@ spec:
         seccompProfile: {type: RuntimeDefault}
       containers:
         - name: agent
-          image: ghcr.io/jtarleton/stagecoach@sha256:a841af345e955751192eca56ea9f4f89e74c4f5fb8d9e1a9835cdab27c88d54d
+          image: ghcr.io/jtarleton/stagecoach:1b23f23eee1dfce5bd812569e085f3dbba03742d
           imagePullPolicy: IfNotPresent
           args: [agent, -interval=60s]
           env:
-            - {name: STAGECOACH_SERVER, value: "http://stage-coach.stage-coach.svc:8080"}
+            - {name: STAGECOACH_SERVER, value: "https://api.stagecoach.sh"}
             - {name: STAGECOACH_CLUSTER_NAME, value: "crystalbit-us"}
             - {name: STAGECOACH_PROVIDER, value: "Vultr"}
             - {name: STAGECOACH_REGION, value: ""}

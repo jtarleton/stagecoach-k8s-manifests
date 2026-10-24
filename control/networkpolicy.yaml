@@ -54,3 +54,19 @@ spec:
         - namespaceSelector: {matchLabels: {kubernetes.io/metadata.name: stagecoach-agent}}
           podSelector: {matchLabels: {app.kubernetes.io/name: stagecoach-agent}}
       ports: [{port: 8080}]
+---
+# The edge (stagecoach-edge Caddy) forwards api.stagecoach.sh/v1/agent/* here.
+# Caddy only proxies that path; this lets nothing else in from the edge.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  namespace: stage-coach
+  name: stage-coach-from-edge
+spec:
+  podSelector:
+    matchLabels: {app.kubernetes.io/name: stage-coach}
+  ingress:
+    - from:
+        - namespaceSelector: {matchLabels: {kubernetes.io/metadata.name: stagecoach-edge}}
+          podSelector: {matchLabels: {app.kubernetes.io/name: caddy}}
+      ports: [{port: 8080}]
