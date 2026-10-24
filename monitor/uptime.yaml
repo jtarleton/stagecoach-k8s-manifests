@@ -1,0 +1,62 @@
+# Uptime probe: every 5 minutes, check the public endpoints the way a visitor
+# reaches them (Cloudflare -> Caddy -> Varnish/Drupal, api., charts.) and
+# report to a healthchecks.io check. healthchecks.io does the alerting, also
+# when pings stop arriving, i.e. when this host is down.
+#
+# Needs secret hc-ping (key url = the check's ping URL, made by hand):
+#   kubectl -n stagecoach-monitor create secret generic hc-ping --from-literal=url=https://hc-ping.com/<uuid>
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: uptime
+spec:
+  schedule: "*/5 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      activeDeadlineSeconds: 120
+      ttlSecondsAfterFinished: 3600
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: uptime
+        spec:
+          restartPolicy: Never
+          automountServiceAccountToken: false
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 100
+            runAsGroup: 101
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: check
+              image: docker.io/curlimages/curl:8.11.1
+              command: [sh, /scripts/check.sh]
+              env:
+                - name: HC_PING_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: hc-ping
+                      key: url
+              resources:
+                requests: {cpu: 10m, memory: 16Mi}
+                limits: {memory: 32Mi}
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop: [ALL]
+              volumeMounts:
+                - {name: scripts, mountPath: /scripts, readOnly: true}
+                - {name: tmp, mountPath: /tmp}
+          volumes:
+            - name: scripts
+              configMap:
+                name: uptime-script
+            - name: tmp
+              emptyDir:
+                sizeLimit: 8Mi
