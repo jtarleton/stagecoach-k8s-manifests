@@ -1,11 +1,10 @@
-# Rendered from the published chart repository (what a customer runs):
+# Rendered from the published chart repository, exactly as a customer runs it:
 #   helm repo add stagecoach https://charts.stagecoach.sh
 #   helm template stagecoach-agent stagecoach/stagecoach-agent --version 0.2.0 -n stagecoach-agent \
-#     --set clusterName=crystalbit-us --set provider=Vultr \
-#     --set existingSecret=stagecoach-agent-token --set imagePullSecrets[0].name=ghcr
-# imagePullSecrets only until ghcr.io/jtarleton/stagecoach-agent is public; then drop it.
-# Reports via https://api.stagecoach.sh (Cloudflare -> edge -> stage-coach), as any customer
-# cluster does. The token secret is minted from the portal (sc-admin), never committed.
+#     --set clusterName=crystalbit-us --set provider=Vultr --set existingSecret=stagecoach-agent-token
+# The image (ghcr.io/jtarleton/stagecoach-agent) is public: no pull secret.
+# Reports via https://api.stagecoach.sh (Cloudflare -> edge -> stage-coach). The token secret is
+# minted from the portal (sc-admin org), never committed.
 ---
 # Source: stagecoach-agent/templates/rbac.yaml
 # The agent reads, cluster-wide, exactly what it reports: nodes (and whether
@@ -77,8 +76,6 @@ spec:
     spec:
       serviceAccountName: stagecoach-agent
       enableServiceLinks: false
-      imagePullSecrets:
-        - name: ghcr
       securityContext:
         runAsNonRoot: true
         runAsUser: 65532
