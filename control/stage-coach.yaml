@@ -131,6 +131,14 @@ spec:
             - {name: STAGE_COACH_JOB_LABELS, value: "stagecoach.sh/php=true"}
             - {name: STAGE_COACH_SNAPSHOT_STORE, value: "pvc://stage-coach-snapshots"}
             - {name: STAGE_COACH_MARIADB_IMAGE, value: "docker.io/library/mariadb:11.8.8"}
+            # Status-page health checks (docs/manual.md, "Health checks"): every
+            # 30s, recorded per minute, served to the portal at /v1/status, and
+            # pinged to healthchecks.io. The ping URLs are a Secret (secrets/README.md).
+            - {name: STAGE_COACH_HEALTH, value: "true"}
+            - {name: STAGE_COACH_HEALTH_PUBLIC_URL, value: "https://api.stagecoach.sh"}
+            - {name: STAGE_COACH_HEALTH_DB_SELECTOR, value: "app.kubernetes.io/name=mariadb"}
+            - name: STAGE_COACH_HEALTH_PINGS
+              valueFrom: {secretKeyRef: {name: stage-coach-health, key: pings, optional: true}}
             - {name: GOMEMLIMIT, value: 100MiB}
           ports:
             - {name: http, containerPort: 8080}
