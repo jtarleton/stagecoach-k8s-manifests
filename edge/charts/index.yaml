@@ -2,8 +2,19 @@ apiVersion: v1
 entries:
   stagecoach-agent:
   - apiVersion: v2
+    appVersion: d434052b04f3e091e53c9af1cf219c27347543c6
+    created: "2026-10-24T01:27:04.725602605Z"
+    description: Reports a Kubernetes cluster to stagecoach.sh (registration, health,
+      nodes, pods, applications).
+    digest: 9ce17f5576419e2d770e1ccbc65848ff561f24a270ee3e4b1a39a8fb23e94bce
+    name: stagecoach-agent
+    type: application
+    urls:
+    - https://charts.stagecoach.sh/stagecoach-agent-0.2.0.tgz
+    version: 0.2.0
+  - apiVersion: v2
     appVersion: 1b23f23eee1dfce5bd812569e085f3dbba03742d
-    created: "2026-10-24T01:08:47.452033342Z"
+    created: "2026-10-24T01:27:04.724999545Z"
     description: Reports a Kubernetes cluster to stagecoach.sh (registration, health,
       nodes, pods, applications).
     digest: f0a444da043422ee1eb86d55fff8b234d96a73a201e7d448e02ddb6f85968e47
@@ -12,4 +23,4 @@ entries:
     urls:
     - https://charts.stagecoach.sh/stagecoach-agent-0.1.0.tgz
     version: 0.1.0
-generated: "2026-10-24T01:08:47.448930664Z"
+generated: "2026-10-24T01:27:04.723579339Z"

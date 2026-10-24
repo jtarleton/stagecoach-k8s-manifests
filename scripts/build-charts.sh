@@ -2,7 +2,8 @@
 # Package the Helm charts from the stagecoach (Go) checkout into edge/charts/,
 # the repository the edge serves at https://charts.stagecoach.sh:
 #   STAGECOACH_DIR=/path/to/stagecoach_go scripts/build-charts.sh
-# Then commit edge/charts/ and apply edge/ (scripts/deploy.sh).
+# Then list any new .tgz in edge/kustomization.yaml (helm-charts), commit
+# edge/charts/ and apply edge/ (scripts/deploy.sh).
 # Packages already published keep their bytes: bump the chart's version to
 # publish a change, as Helm clients cache by version.
 set -euo pipefail
