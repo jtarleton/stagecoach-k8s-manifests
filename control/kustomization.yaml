@@ -11,6 +11,6 @@ resources:
   - networkpolicy.yaml
 images:
   - name: ghcr.io/jtarleton/stagecoach
-    # CI build of jtarleton/stagecoach 8279d90 (feat/health-checks, on main
-    # 0677ec3): status-page health checks, GET /v1/status.
-    digest: sha256:442ccc1867bc8428d4e99e86a88c749e7c0cf8d8009888c9c6a50eb9fb58b43f
+    # CI build of jtarleton/stagecoach f666103 (feat/health-portal-email, on
+    # main af17e05): portal and email checks via -health-site-url.
+    digest: sha256:20da68a62d5c6b06557175b9ad288ac24499e71d0ef0562489dec421c54129cf

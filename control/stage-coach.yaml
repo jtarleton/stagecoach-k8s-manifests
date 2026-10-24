@@ -137,6 +137,9 @@ spec:
             - {name: STAGE_COACH_HEALTH, value: "true"}
             - {name: STAGE_COACH_HEALTH_PUBLIC_URL, value: "https://api.stagecoach.sh"}
             - {name: STAGE_COACH_HEALTH_DB_SELECTOR, value: "app.kubernetes.io/name=mariadb"}
+            # portal and email: the site's /health/{portal,email} (needs a stage-coach
+            # image with -health-site-url and the app with stagecoach_signup HealthCheck).
+            - {name: STAGE_COACH_HEALTH_SITE_URL, value: "https://stagecoach.sh"}
             - name: STAGE_COACH_HEALTH_PINGS
               valueFrom: {secretKeyRef: {name: stage-coach-health, key: pings, optional: true}}
             - {name: GOMEMLIMIT, value: 100MiB}
