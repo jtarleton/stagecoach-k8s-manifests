@@ -12,6 +12,9 @@ patches:
       - op: replace
         path: /metadata/name
         value: stagecoach-dev
+      - op: replace
+        path: /metadata/labels/stagecoach.sh~1environment
+        value: dev
   - patch: |-
       $patch: delete
       apiVersion: batch/v1

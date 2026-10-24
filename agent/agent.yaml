@@ -1,0 +1,105 @@
+# Rendered from github.com/jtarleton/stagecoach deploy/helm/stagecoach-agent (feat/agent, 1b23f23):
+#   helm template stagecoach-agent deploy/helm/stagecoach-agent -n stagecoach-agent \
+#     --set clusterName=crystalbit-us --set provider=Vultr --set server=http://stage-coach.stage-coach.svc:8080 \
+#     --set existingSecret=stagecoach-agent-token --set image.digest=<digest> --set imagePullSecrets[0].name=ghcr
+# The token secret is minted from the portal (sc-admin org), never committed.
+---
+# Source: stagecoach-agent/templates/rbac.yaml
+# The agent reads, cluster-wide, exactly what it reports: nodes (and whether
+# they are Ready), pods (how many are live), namespaces (their
+# stagecoach.sh/application and stagecoach.sh/environment labels). Nothing else.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: stagecoach-agent
+  namespace: stagecoach-agent
+  labels:
+    app.kubernetes.io/name: stagecoach-agent
+    app.kubernetes.io/instance: stagecoach-agent
+    app.kubernetes.io/version: "0.1.0"
+---
+# Source: stagecoach-agent/templates/rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: stagecoach-agent
+  labels:
+    app.kubernetes.io/name: stagecoach-agent
+    app.kubernetes.io/instance: stagecoach-agent
+    app.kubernetes.io/version: "0.1.0"
+rules:
+  - apiGroups: [""]
+    resources: [nodes, pods, namespaces]
+    verbs: [list]
+---
+# Source: stagecoach-agent/templates/rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: stagecoach-agent
+  labels:
+    app.kubernetes.io/name: stagecoach-agent
+    app.kubernetes.io/instance: stagecoach-agent
+    app.kubernetes.io/version: "0.1.0"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: stagecoach-agent
+subjects:
+  - kind: ServiceAccount
+    name: stagecoach-agent
+    namespace: stagecoach-agent
+---
+# Source: stagecoach-agent/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stagecoach-agent
+  namespace: stagecoach-agent
+  labels:
+    app.kubernetes.io/name: stagecoach-agent
+    app.kubernetes.io/instance: stagecoach-agent
+    app.kubernetes.io/version: "0.1.0"
+spec:
+  replicas: 1
+  strategy: {type: Recreate}
+  selector:
+    matchLabels: {app.kubernetes.io/name: stagecoach-agent, app.kubernetes.io/instance: stagecoach-agent}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: stagecoach-agent
+        app.kubernetes.io/instance: stagecoach-agent
+        app.kubernetes.io/version: "0.1.0"
+    spec:
+      serviceAccountName: stagecoach-agent
+      enableServiceLinks: false
+      imagePullSecrets:
+        - name: ghcr
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        seccompProfile: {type: RuntimeDefault}
+      containers:
+        - name: agent
+          image: ghcr.io/jtarleton/stagecoach@sha256:a841af345e955751192eca56ea9f4f89e74c4f5fb8d9e1a9835cdab27c88d54d
+          imagePullPolicy: IfNotPresent
+          args: [agent, -interval=60s]
+          env:
+            - {name: STAGECOACH_SERVER, value: "http://stage-coach.stage-coach.svc:8080"}
+            - {name: STAGECOACH_CLUSTER_NAME, value: "crystalbit-us"}
+            - {name: STAGECOACH_PROVIDER, value: "Vultr"}
+            - {name: STAGECOACH_REGION, value: ""}
+            - name: STAGECOACH_TOKEN
+              valueFrom: {secretKeyRef: {name: stagecoach-agent-token, key: token}}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: [ALL]}
+          resources:
+            limits:
+              memory: 96Mi
+            requests:
+              cpu: 10m
+              memory: 32Mi

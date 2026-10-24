@@ -39,3 +39,18 @@ spec:
         - namespaceSelector: {matchLabels: {kubernetes.io/metadata.name: stagecoach-dev}}
           podSelector: {matchLabels: {app.kubernetes.io/managed-by: stage-coach}}
       ports: [{port: 3306}]
+---
+# The stagecoach.sh agent on this cluster (agent/) reports to Stagecoach in-cluster.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  namespace: stage-coach
+  name: stage-coach-from-agent
+spec:
+  podSelector:
+    matchLabels: {app.kubernetes.io/name: stage-coach}
+  ingress:
+    - from:
+        - namespaceSelector: {matchLabels: {kubernetes.io/metadata.name: stagecoach-agent}}
+          podSelector: {matchLabels: {app.kubernetes.io/name: stagecoach-agent}}
+      ports: [{port: 8080}]
