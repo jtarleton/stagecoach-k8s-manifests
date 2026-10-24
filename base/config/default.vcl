@@ -119,6 +119,13 @@ sub vcl_deliver {
     unset resp.http.X-Varnish;
     unset resp.http.Via;
 
+    # Pages live long in Varnish (Drupal's page cache max-age, purged by
+    # cache tag), but a purge cannot reach a browser: tell clients to
+    # revalidate every time, so a changed page is seen at once.
+    if (resp.http.Content-Type ~ "text/html") {
+        set resp.http.Cache-Control = "public, max-age=0, must-revalidate";
+    }
+
     if (obj.hits > 0) {
         set resp.http.X-Cache = "HIT";
     } else {
