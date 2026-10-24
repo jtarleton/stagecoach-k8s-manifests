@@ -33,4 +33,4 @@ configMapGenerator:
       - STAGECOACH_GO_URL=http://stage-coach.stage-coach.svc:8080
 images:
   - name: localhost/stagecoach/drupal
-    newTag: "202610241550-9905f14"
+    newTag: "202610241624-79b2c2c"
