@@ -11,5 +11,5 @@ resources:
   - networkpolicy.yaml
 images:
   - name: ghcr.io/jtarleton/stagecoach
-    # CI build of jtarleton/stagecoach 1817446 (main).
-    digest: sha256:2dc8ad67f69a21b70033cf15295b0d4213a95d8fb80dc6600b8c6fc43bfa8368
+    # CI build of jtarleton/stagecoach 0677ec3 (main): per-project plan limits.
+    digest: sha256:018a75b074cc0a461e9e70cb46fa9c8606421e7ac0484be085d538239163770f
