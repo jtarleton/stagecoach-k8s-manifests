@@ -11,6 +11,6 @@ resources:
   - networkpolicy.yaml
 images:
   - name: ghcr.io/jtarleton/stagecoach
-    # CI build of jtarleton/stagecoach daa4856 (= Go main): Workflow tab
-    # restyled as the stagecoach.sh Environment Pipeline.
-    digest: sha256:ef89ea8966cb6c49ab6ebe5728f7fec1ea8c1a6b8bbf27b9daa698215e8a7c5a
+    # CI build of jtarleton/stagecoach 77770e6 (= Go main): Environment
+    # Pipeline workflow UI, kept inside the page width.
+    digest: sha256:15d7e1531aa1bd68db7bf5a5837a9928dbc42a5413a3c3206e6cce24d8b2c4a0
