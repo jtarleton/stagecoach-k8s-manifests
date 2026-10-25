@@ -11,6 +11,6 @@ resources:
   - networkpolicy.yaml
 images:
   - name: ghcr.io/jtarleton/stagecoach
-    # CI build of jtarleton/stagecoach f666103 (= Go main): portal and email
-    # checks via -health-site-url.
-    digest: sha256:20da68a62d5c6b06557175b9ad288ac24499e71d0ef0562489dec421c54129cf
+    # CI build of jtarleton/stagecoach daa4856 (= Go main): Workflow tab
+    # restyled as the stagecoach.sh Environment Pipeline.
+    digest: sha256:ef89ea8966cb6c49ab6ebe5728f7fec1ea8c1a6b8bbf27b9daa698215e8a7c5a
