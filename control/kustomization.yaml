@@ -11,6 +11,6 @@ resources:
   - networkpolicy.yaml
 images:
   - name: ghcr.io/jtarleton/stagecoach
-    # CI build of jtarleton/stagecoach 77770e6 (= Go main): Environment
-    # Pipeline workflow UI, kept inside the page width.
-    digest: sha256:15d7e1531aa1bd68db7bf5a5837a9928dbc42a5413a3c3206e6cce24d8b2c4a0
+    # CI build of jtarleton/stagecoach 2e1618e (= Go main): Environment
+    # Pipeline workflow UI; cards say healthy.
+    digest: sha256:3928d6b4e58d47e6dda5751d2a651e1b7b9a8efa10372391d9dd06b6a95d587e
