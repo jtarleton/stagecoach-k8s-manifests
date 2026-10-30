@@ -25,7 +25,12 @@ buildah run -v "$(realpath "$src")":/src:ro -v "$(realpath "$out")":/out "$c" sh
     if [ -e "/out/$name-$version.tgz" ]; then
       echo "$name $version already published, kept"
     else
-      helm lint "$chart" --set clusterName=x --set token=stg_live_x >/dev/null
+      # A chart with required values brings its own (ci/lint-values.yaml).
+      if [ -f "$chart/ci/lint-values.yaml" ]; then
+        helm lint "$chart" -f "$chart/ci/lint-values.yaml" >/dev/null
+      else
+        helm lint "$chart" --set clusterName=x --set token=stg_live_x >/dev/null
+      fi
       helm package "$chart" -d /out >/dev/null
       echo "$name $version packaged"
     fi

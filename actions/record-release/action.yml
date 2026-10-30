@@ -1,0 +1,58 @@
+name: Record a Stagecoach release
+description: >-
+  Record a built image as a release on a Stagecoach cluster, so the stage_coach
+  module can deploy it by git ref. Hosted plan: through api.stagecoach.sh with a
+  release token. Community plan: set server to your Stagecoach server's URL and
+  use its release token.
+inputs:
+  image:
+    description: The image, ideally by digest (registry/repo@sha256:...).
+    required: true
+  token:
+    description: A release token (hosted), or your server's release token (community).
+    required: true
+  cluster:
+    description: "Hosted plan: the cluster id (cl_...) shown in the stagecoach.sh portal."
+    required: false
+    default: ""
+  server:
+    description: "Community plan: your Stagecoach server's base URL. Leave empty for hosted."
+    required: false
+    default: ""
+  ref:
+    description: The git ref the image was built from.
+    required: false
+    default: ${{ github.ref }}
+  sha:
+    description: The git commit sha.
+    required: false
+    default: ${{ github.sha }}
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        SC_IMAGE: ${{ inputs.image }}
+        SC_TOKEN: ${{ inputs.token }}
+        SC_CLUSTER: ${{ inputs.cluster }}
+        SC_SERVER: ${{ inputs.server }}
+        SC_REF: ${{ inputs.ref }}
+        SC_SHA: ${{ inputs.sha }}
+      run: |
+        set -euo pipefail
+        if [ -n "$SC_SERVER" ]; then
+          base="${SC_SERVER%/}"
+        elif [[ "$SC_CLUSTER" =~ ^[A-Za-z0-9_.-]{1,64}$ ]]; then
+          base="https://api.stagecoach.sh/v1/clusters/$SC_CLUSTER"
+        else
+          echo "::error::set cluster (hosted, cl_...) or server (community)"; exit 1
+        fi
+        case "$SC_IMAGE" in *@sha256:*) ;; *) echo "::warning::$SC_IMAGE is not pinned by digest; deploys of it will not be traceable to this build";; esac
+        echo "::add-mask::$SC_TOKEN"
+        curl -fsS --retry 3 --retry-all-errors -X POST "$base/api/releases" \
+          -H "Authorization: Bearer $SC_TOKEN" -H "Accept: application/json" \
+          -H "X-Stage-Coach-Actor: ci:github" \
+          --data-urlencode "image=$SC_IMAGE" \
+          --data-urlencode "ref=$SC_REF" \
+          --data-urlencode "sha=$SC_SHA"
+        echo "recorded $SC_IMAGE ($SC_REF) on $base"

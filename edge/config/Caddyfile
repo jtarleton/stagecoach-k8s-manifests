@@ -46,10 +46,11 @@ stagecoach.sh {
 	}
 }
 
-# The stagecoach.sh agent API, for customers' clusters. Only /v1/agent/* and
-# /v1/clusters/* are public, both behind tenant tokens: agents register, report
-# and (serve -relay) fetch relayed requests; the stage_coach module sends
-# hosted-deploy requests to /v1/clusters/<id>/api/*. /v1/tenants takes the
+# The stagecoach.sh agent API, for customers' clusters. Only /v1/agent/*,
+# /v1/clusters and /v1/clusters/* are public, all behind tenant tokens: agents
+# register, report and (serve -relay) fetch relayed requests; the stage_coach
+# module lists its token's clusters at /v1/clusters and sends hosted-deploy
+# requests (CI its releases) to /v1/clusters/<id>/api/*. /v1/tenants takes the
 # portal's token, which acts on any tenant, and /api runs operations on this
 # cluster — neither ever leaves it.
 api.stagecoach.sh {
@@ -60,7 +61,7 @@ api.stagecoach.sh {
 		-Server
 	}
 
-	@agent path /v1/agent/* /v1/clusters/*
+	@agent path /v1/agent/* /v1/clusters /v1/clusters/*
 	handle @agent {
 		# Relayed answers (history, releases) can run to megabytes; Go caps
 		# every endpoint's body itself.

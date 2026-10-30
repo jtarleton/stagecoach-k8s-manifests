@@ -11,6 +11,6 @@ resources:
   - networkpolicy.yaml
 images:
   - name: ghcr.io/jtarleton/stagecoach
-    # CI build of jtarleton/stagecoach 0836233 (= Go main, PR #14 hosted
-    # deploys; same tree as the d03ca70/d122692 branch build it replaces).
-    digest: sha256:7c34be64432db095135c0eb97ee8e0e7ed908c58861676556e6cef55f8dca5d9
+    # CI build of jtarleton/stagecoach main 7742b15: cluster/site/release
+    # tokens, relayed releases, GET /v1/clusters, live-after-deploy check.
+    digest: sha256:b7eca7794fa3eee535383f1792addcd1f5c9240ccc52a28fcf1b973840bb4a3f
