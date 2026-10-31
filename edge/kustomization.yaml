@@ -24,6 +24,7 @@ configMapGenerator:
       - charts/stagecoach-agent-0.3.1.tgz
       - charts/stagecoach-0.1.0.tgz
       - charts/stagecoach-0.1.1.tgz
+      - charts/stagecoach-0.1.2.tgz
 images:
   - name: localhost/stagecoach/caddy
     newTag: "202610200041-ee158ce-dirty"
