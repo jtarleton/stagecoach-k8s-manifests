@@ -11,6 +11,7 @@ resources:
   - networkpolicy.yaml
 images:
   - name: ghcr.io/jtarleton/stagecoach
-    # CI build of jtarleton/stagecoach main e1dfc19 (= chart stagecoach 0.1.1):
-    # each cluster is bound to the cluster token that registered it.
-    digest: sha256:1337bd0565356f54575cb88ac7081367b062a2b86b041befbc7c4152b7e626b6
+    # CI build of jtarleton/stagecoach stagecoachd-split a4ac71b (PR #20, on
+    # main 552f572): the binary is /stagecoachd and only serves; environments
+    # come from -environment flags, not init containers.
+    digest: sha256:590ffaf25329133c913c96dbf97cfb69dd83648d9daa89fa86728ee7b0c30874

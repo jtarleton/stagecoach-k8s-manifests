@@ -65,6 +65,8 @@ spec:
       labels: {app.kubernetes.io/name: stage-coach}
     spec:
       serviceAccountName: stage-coach
+      # stagecoachd drains in at most 10s on SIGTERM.
+      terminationGracePeriodSeconds: 30
       # CI's private ghcr image; the pull secret is created by hand, not in git:
       #   kubectl -n stage-coach create secret docker-registry ghcr --docker-server=ghcr.io ...
       imagePullSecrets: [{name: ghcr}]
@@ -75,41 +77,22 @@ spec:
         runAsGroup: 65532
         fsGroup: 65532          # so the PVC is writable
         seccompProfile: {type: RuntimeDefault}
-      initContainers:
-        # Register this cluster's environment before serve starts; without it
-        # serve would seed the original jamestarleton.com defaults. Idempotent.
-        - name: register-env
-          image: ghcr.io/jtarleton/stagecoach
-          imagePullPolicy: IfNotPresent
-          args: [env, -db=/data/stage-coach.db, -env=prod, -rank=30,
-                 -namespace=stagecoach, -host=stagecoach.sh, -prod]
-          volumeMounts: [{name: db, mountPath: /data}]
-          securityContext:
-            allowPrivilegeEscalation: false
-            readOnlyRootFilesystem: true
-            capabilities: {drop: [ALL]}
-          resources:
-            requests: {cpu: 10m, memory: 16Mi}
-            limits: {memory: 64Mi}
-        - name: register-env-dev
-          image: ghcr.io/jtarleton/stagecoach
-          imagePullPolicy: IfNotPresent
-          args: [env, -db=/data/stage-coach.db, -env=dev, -rank=10,
-                 -namespace=stagecoach-dev, -host=dev.stagecoach.sh]
-          volumeMounts: [{name: db, mountPath: /data}]
-          securityContext:
-            allowPrivilegeEscalation: false
-            readOnlyRootFilesystem: true
-            capabilities: {drop: [ALL]}
-          resources:
-            requests: {cpu: 10m, memory: 16Mi}
-            limits: {memory: 64Mi}
       containers:
         - name: stage-coach
           image: ghcr.io/jtarleton/stagecoach
           imagePullPolicy: IfNotPresent
+          command: [/stagecoachd]
           # The Drupal Deployment here is "drupal", its container "frankenphp".
-          args: [serve, -addr=:8080, -db=/data/stage-coach.db, -workload=drupal, -container=frankenphp]
+          # Each -environment is registered (or updated) at startup, before
+          # serving; without them the server would seed the original
+          # jamestarleton.com defaults.
+          args:
+            - -addr=:8080
+            - -db=/data/stage-coach.db
+            - -workload=drupal
+            - -container=frankenphp
+            - "-environment=name=prod,namespace=stagecoach,host=stagecoach.sh,rank=30,prod"
+            - "-environment=name=dev,namespace=stagecoach-dev,host=dev.stagecoach.sh,rank=10"
           env:
             # user:password for HTTP Basic auth on the bundled web UI.
             - name: STAGE_COACH_AUTH
