@@ -2,8 +2,20 @@ apiVersion: v1
 entries:
   stagecoach:
   - apiVersion: v2
+    appVersion: ac09463520fd958aec7b96f8a09a965c3e43924e
+    created: "2026-11-01T00:23:18.911161003Z"
+    description: The Stagecoach server for drupal/stage_coach, in your cluster. mode
+      hosted connects it to stagecoach.sh (the module goes through api.stagecoach.sh);
+      mode community serves the module directly.
+    digest: 7f9a5dd072dd541fd13b53f835a0411e4fecb6972acf4c2857920949106413bf
+    name: stagecoach
+    type: application
+    urls:
+    - https://charts.stagecoach.sh/stagecoach-0.2.0.tgz
+    version: 0.2.0
+  - apiVersion: v2
     appVersion: e1dfc19adce3707eab2d4f7fc9740b766fed1b91
-    created: "2026-10-31T15:17:58.329768638Z"
+    created: "2026-11-01T00:23:18.909658702Z"
     description: The Stagecoach server for drupal/stage_coach, in your cluster. mode
       hosted connects it to stagecoach.sh (the module goes through api.stagecoach.sh);
       mode community serves the module directly.
@@ -15,7 +27,7 @@ entries:
     version: 0.1.3
   - apiVersion: v2
     appVersion: e1dfc19adce3707eab2d4f7fc9740b766fed1b91
-    created: "2026-10-31T15:17:58.32852689Z"
+    created: "2026-11-01T00:23:18.90801893Z"
     description: The Stagecoach server for drupal/stage_coach, in your cluster. mode
       hosted connects it to stagecoach.sh (the module goes through api.stagecoach.sh);
       mode community serves the module directly.
@@ -27,7 +39,7 @@ entries:
     version: 0.1.2
   - apiVersion: v2
     appVersion: e1dfc19adce3707eab2d4f7fc9740b766fed1b91
-    created: "2026-10-31T15:17:58.326795112Z"
+    created: "2026-11-01T00:23:18.902675511Z"
     description: The Stagecoach server for drupal/stage_coach, in your cluster. mode
       hosted connects it to stagecoach.sh (the module goes through api.stagecoach.sh);
       mode community serves the module directly.
@@ -39,7 +51,7 @@ entries:
     version: 0.1.1
   - apiVersion: v2
     appVersion: 7742b154471486255b73ce490f92143fac144647
-    created: "2026-10-31T15:17:58.325072786Z"
+    created: "2026-11-01T00:23:18.901210412Z"
     description: The Stagecoach server for drupal/stage_coach, in your cluster. mode
       hosted connects it to stagecoach.sh (the module goes through api.stagecoach.sh);
       mode community serves the module directly.
@@ -52,7 +64,19 @@ entries:
   stagecoach-agent:
   - apiVersion: v2
     appVersion: 7742b154471486255b73ce490f92143fac144647
-    created: "2026-10-31T15:17:58.333867955Z"
+    created: "2026-11-01T00:23:18.916529488Z"
+    description: Reports a Kubernetes cluster to stagecoach.sh. For deploys (hosted
+      or community), use the stagecoach chart instead; deploys.enabled here is kept
+      for existing installs.
+    digest: 41020cf414bf3ee6578b8b35afb0881b32b38fada141306b602d4b1526fbd94f
+    name: stagecoach-agent
+    type: application
+    urls:
+    - https://charts.stagecoach.sh/stagecoach-agent-0.4.0.tgz
+    version: 0.4.0
+  - apiVersion: v2
+    appVersion: 7742b154471486255b73ce490f92143fac144647
+    created: "2026-11-01T00:23:18.915134306Z"
     description: Reports a Kubernetes cluster to stagecoach.sh. For deploys (hosted
       or community), use the stagecoach chart instead; deploys.enabled here is kept
       for existing installs.
@@ -64,7 +88,7 @@ entries:
     version: 0.3.1
   - apiVersion: v2
     appVersion: d434052b04f3e091e53c9af1cf219c27347543c6
-    created: "2026-10-31T15:17:58.332594707Z"
+    created: "2026-11-01T00:23:18.914064658Z"
     description: Reports a Kubernetes cluster to stagecoach.sh and, with deploys.enabled,
       runs the stage_coach module's hosted deploys in it.
     digest: 09cbbced661b62cbd5debff0fab81aa609a349bc84aeb8cb2614cfd3065d3653
@@ -75,7 +99,7 @@ entries:
     version: 0.3.0
   - apiVersion: v2
     appVersion: d434052b04f3e091e53c9af1cf219c27347543c6
-    created: "2026-10-31T15:17:58.331535433Z"
+    created: "2026-11-01T00:23:18.912664492Z"
     description: Reports a Kubernetes cluster to stagecoach.sh (registration, health,
       nodes, pods, applications).
     digest: 9ce17f5576419e2d770e1ccbc65848ff561f24a270ee3e4b1a39a8fb23e94bce
@@ -86,7 +110,7 @@ entries:
     version: 0.2.0
   - apiVersion: v2
     appVersion: 1b23f23eee1dfce5bd812569e085f3dbba03742d
-    created: "2026-10-31T15:17:58.330601895Z"
+    created: "2026-11-01T00:23:18.911950378Z"
     description: Reports a Kubernetes cluster to stagecoach.sh (registration, health,
       nodes, pods, applications).
     digest: f0a444da043422ee1eb86d55fff8b234d96a73a201e7d448e02ddb6f85968e47
@@ -95,4 +119,4 @@ entries:
     urls:
     - https://charts.stagecoach.sh/stagecoach-agent-0.1.0.tgz
     version: 0.1.0
-generated: "2026-10-31T15:17:58.321251472Z"
+generated: "2026-11-01T00:23:18.884864089Z"
